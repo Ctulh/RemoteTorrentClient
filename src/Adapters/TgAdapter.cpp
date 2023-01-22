@@ -12,7 +12,7 @@ namespace {
 
 
 TgAdapter::TgAdapter(const std::string &configPath, std::shared_ptr<IApplication> application): m_application(std::move(application)),
-                                                                                                m_bot("TOKEN_PLACE)") {
+                                                                                                m_bot("TokenHere") { //TODO config reader
     m_bot.getEvents().onCommand("start", [this](TgBot::Message::Ptr message) {
         m_bot.getApi().sendMessage(message->chat->id, "start");
     });
@@ -47,7 +47,7 @@ std::string TgAdapter::addTorrent(std::string const& message) {
     return ss.str();
 }
 std::string TgAdapter::deleteTorrent(std::string const& torrentId) {
-
+    return "Success";
 }
 
 std::string TgAdapter::getTorrents() const {

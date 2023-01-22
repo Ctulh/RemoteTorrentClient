@@ -64,3 +64,4 @@ TEST(TransmissionTorrentParser, test_transmission_string_parser_from_string_with
 
     ASSERT_EQ(torrents.size(), 0);
 }
+

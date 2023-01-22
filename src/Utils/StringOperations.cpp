@@ -7,7 +7,19 @@
 #include <algorithm>
 #include <ranges>
 
-StringVector StringOperations::split(const std::string &str, char delimiter) {
+std::string StringOperations::strip(std::string const& str) {
+    std::input_iterator auto begin = std::ranges::find_if(str.begin(), str.end(), [](auto symbol) {
+        return symbol != ' ';
+    });
+
+    std::input_iterator auto end = std::ranges::find_if(str.rbegin(), str.rend(), [](auto symbol) {
+        return symbol != ' ';
+    });
+
+    return {begin, end.base()};
+}
+
+StringVector StringOperations::split(std::string const& str, char delimiter) {
     StringVector result;
 
     std::string buf;
