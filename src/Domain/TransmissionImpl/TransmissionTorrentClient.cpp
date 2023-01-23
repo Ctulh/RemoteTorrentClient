@@ -18,9 +18,9 @@ Torrent TransmissionTorrentClient::addTorrent(std::string const& url) {
 Torrent TransmissionTorrentClient::deleteTorrent(std::string const& id) {
     auto deleteResult = TransmissionTorrentPerformer::deleteTorrent(id);
     if(deleteResult.find("success") != std::string::npos) {
-        return TorrentBuilder().withName("Success").build();
+        return TorrentBuilder().withMessage("Success").build();
     }
-    return TorrentBuilder().withName("Error").build();
+    return TorrentBuilder().withMessage("Error").build();
 }
 
 Torrents TransmissionTorrentClient::getTorrents() const {

@@ -4,6 +4,7 @@
 #include "Domain/TransmissionImpl/TransmissionTorrentPerformer.hpp"
 
 #include <stdio.h>
+#include <iostream>
 
 std::string TransmissionTorrentPerformer::addTorrent(const std::string &magnetLink) {
     std::string resultString;

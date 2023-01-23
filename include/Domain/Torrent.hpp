@@ -14,7 +14,7 @@ struct Torrent {
     std::string name;
     std::string downloadSpeed;
     std::string uploadSpeed;
-    std::string done;
+    std::string percentsDone;
     std::string timeLeft;
 };
 

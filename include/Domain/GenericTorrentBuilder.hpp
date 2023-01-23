@@ -19,10 +19,16 @@ public:
         return static_cast<ConcreteBuilder&&>(*this);
     }
 
+    ConcreteBuilder&& withMessage(std::string const& message) {
+        m_torrent.message = message;
+        return static_cast<ConcreteBuilder&&>(*this);
+    }
+
     ConcreteBuilder&& withId(std::string const& id) {
         m_torrent.id = id;
         return static_cast<ConcreteBuilder&&>(*this);
     }
+
     ConcreteBuilder&& withName(std::string const& name) {
         m_torrent.name = name;
         return static_cast<ConcreteBuilder&&>(*this);
@@ -40,7 +46,7 @@ public:
         return static_cast<ConcreteBuilder&&>(*this);
     }
     ConcreteBuilder&& withPercentsDone(std::string const& percentsDone) {
-        m_torrent.done = percentsDone;
+        m_torrent.percentsDone = percentsDone;
         return static_cast<ConcreteBuilder&&>(*this);
     }
 
