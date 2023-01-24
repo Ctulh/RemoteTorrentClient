@@ -2,7 +2,8 @@
 // Created by ctuh on 1/19/23.
 //
 #include "Framework/Adapters/TgAdapter.hpp"
-#include "tgbot/tgbot.h"
+#include <tgbot/tgbot.h>
+#include "Utils/FileWriter.hpp"
 
 #include <sstream>
 
@@ -14,34 +15,42 @@ namespace {
 TgAdapter::TgAdapter(const std::string &configPath, std::shared_ptr<IApplication> application): m_application(std::move(application)),
                                                                                                 m_bot("TOKEN_HERE") { //TODO config reader
     m_bot.getEvents().onCommand("start", [this](TgBot::Message::Ptr message) {
-        m_bot.getApi().sendMessage(message->chat->id, "start");
+        m_bot.getApi().sendMessage(message->chat->id, "Hi!");
     });
 
     m_bot.getEvents().onCommand("add", [this](TgBot::Message::Ptr message) {
         auto result = this->addTorrent(message->text);
         m_bot.getApi().sendMessage(message->chat->id, result);
     });
+
     m_bot.getEvents().onCommand("del", [this](TgBot::Message::Ptr message) {
         auto result = this->deleteTorrent(message->text);
         m_bot.getApi().sendMessage(message->chat->id, result);
     });
+
     m_bot.getEvents().onCommand("list", [this](TgBot::Message::Ptr message) {
         auto result = this->getTorrents();
         m_bot.getApi().sendMessage(message->chat->id, result);
     });
+
+    m_bot.getEvents().onNonCommandMessage([this](TgBot::Message::Ptr message) {
+        try {
+            auto result = onFileSentImpl(message->document->fileId, message->document->fileName);
+            m_bot.getApi().sendMessage(message->chat->id, result);
+        }
+        catch(std::exception& e) {
+            m_bot.getApi().sendMessage(message->chat->id, "Cant process this message");
+        }
+    });
 }
 
-std::string TgAdapter::addTorrent(std::string const& message) {
-    auto startPos = message.find(::addCommandString);
-    if(startPos == std::string::npos) {
-        return ("Wrong command: " + message);
+std::string TgAdapter::addTorrent(std::string const& torrent) {
+    auto startPos = torrent.find(::addCommandString);
+    if(startPos != std::string::npos) {
+        startPos += ::addCommandString.size() + 1;
+        return addTorrentImpl(torrent.substr(startPos));
     }
-    startPos += ::addCommandString.size() + 1; // Because of space after command
-    auto result = m_application->addTorrent(message.substr(startPos));
-
-    std::stringstream ss;
-    ss << "Torrent successfully added \n";
-    return ss.str();
+    return addTorrentImpl(torrent);
 }
 
 std::string TgAdapter::deleteTorrent(std::string const& message) {
@@ -50,10 +59,8 @@ std::string TgAdapter::deleteTorrent(std::string const& message) {
         return "Error Id not found";
 
     auto torrentId = message.substr(beginOfTorrentId);
-    auto result = m_application->deleteTorrent(torrentId);
-    if(result.message.has_value())
-        return result.message.value();
-    return "Error";
+
+    return deleteTorrentImpl(torrentId);
 }
 
 std::string TgAdapter::getTorrents() const {
@@ -73,6 +80,30 @@ std::string TgAdapter::getTorrents() const {
 
     std::ranges::for_each(torrents->begin(), torrents->end(), writeTorrentInfo);
     return resultMessage.str();
+}
+
+std::string TgAdapter::deleteTorrentImpl(std::string const& torrentId) {
+    auto result = m_application->deleteTorrent(torrentId);
+    if(result.message.has_value())
+        return result.message.value();
+    return "Error";
+}
+
+std::string TgAdapter::addTorrentImpl(const std::string &torrent) {
+    auto result = m_application->addTorrent(torrent);
+    if(result.message.has_value())
+        return result.message.value();
+    return "Unexpected result";
+}
+
+std::string TgAdapter::onFileSentImpl(std::string const& fileId, std::string const& fileName) {
+    auto file = this->m_bot.getApi().getFile(fileId);
+    auto fileData = this->m_bot.getApi().downloadFile(file->filePath);
+
+    auto filePath = "tgDownloads/" + fileName; //TODO load download tg file dir from config
+    FileWriter::write(fileData, filePath);
+
+    return this->addTorrentImpl(filePath);
 }
 
 double TgAdapter::toMegabytesInSecond(const std::string &speed) {

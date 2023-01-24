@@ -6,7 +6,20 @@
 #include <stdio.h>
 #include <iostream>
 
-std::string TransmissionTorrentPerformer::addTorrent(const std::string &magnetLink) {
+bool TransmissionTorrentPerformer::init() {
+    std::string resultString;
+    FILE *fp = popen("transmission-daemon", "r");
+    char buf[1024];
+
+    while (fgets(buf, 1024, fp)) {
+        resultString += buf;
+    }
+    if(resultString.empty())
+        return true;
+    return false;
+}
+
+bool TransmissionTorrentPerformer::addTorrent(const std::string &magnetLink) {
     std::string resultString;
     FILE *fp = popen( ("transmission-remote -a \"" + magnetLink + '\"').c_str(), "r");
     char buf[1024];
@@ -14,7 +27,9 @@ std::string TransmissionTorrentPerformer::addTorrent(const std::string &magnetLi
     while (fgets(buf, 1024, fp)) {
         resultString += buf;
     }
-    return resultString;
+    if(resultString.find("Error") != std::string::npos)
+        return false;
+    return true;
 }
 
 std::string TransmissionTorrentPerformer::deleteTorrent(std::string const& id) {

@@ -4,7 +4,8 @@ set(INCLUDE_PATH ${PROJECT_SOURCE_DIR}/include)
 
 set(HEADERS ${INCLUDE_PATH}/Framework/Adapters/TgAdapter.hpp
             ${INCLUDE_PATH}/Application/IApplication.hpp
-            ${INCLUDE_PATH}/Domain/TransmissionImpl/TransmissionTorrentClient.hpp)
+            ${INCLUDE_PATH}/Domain/TransmissionImpl/TransmissionTorrentClient.hpp
+            ${INCLUDE_PATH}/Utils/FileWriter.hpp)
 
 
 
@@ -16,7 +17,8 @@ set(SOURCES Adapters/TgAdapter.cpp
             Domain/TransmissionImpl/TransmissionTorrentPerformer.cpp
             Domain/Torrent.cpp
             Domain/DomainImpl.cpp
-            Utils/StringOperations.cpp)
+            Utils/StringOperations.cpp
+            Utils/FileWriter.cpp)
 
 
 add_library(${LIB_NAME} ${SOURCES} ${HEADERS})

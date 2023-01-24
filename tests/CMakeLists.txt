@@ -11,7 +11,7 @@ add_executable(${TEST_NAME} ${SOURCES})
 
 
 target_include_directories(${TEST_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include)
-target_link_libraries(${TEST_NAME} PRIVATE ${CONAN_LIBS_GTEST} TorrentManagerLib)
+target_link_libraries(${TEST_NAME} PRIVATE TorrentManagerLib ${CONAN_LIBS})
 
 
 add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})

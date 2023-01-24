@@ -20,7 +20,7 @@ namespace {
     std::regex downloadSpeedRegex(R"(\d\s+\d+.\d+\s+)");
     std::regex ratioRegex(R"(\s+\d+.\d+\s+Idle|\s+\d+.\d+\s+Downloading)");
     std::regex downloadStatusRegex(R"(\s+Idle|\s+Downloading)");
-    std::regex torrentNameRegex(R"(Idle\s+.+|Downloading\s+.+)");
+    std::regex torrentNameRegex(R"(Idle\s+.+|Downloading\s+.+|Stopped\s+.+)");
 
     std::string getTorrentId(std::string const& data) {
         std::smatch match;

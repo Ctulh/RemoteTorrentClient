@@ -8,16 +8,20 @@
 #include <memory>
 #include <atomic>
 
-class TgAdapter: public Interface {
+class TgAdapter final : public Interface {
 public:
     explicit TgAdapter(std::string const& configPath, std::shared_ptr<IApplication> application);
 public:
-    std::string addTorrent(std::string const& magnetUrl);
-    std::string deleteTorrent(std::string const& torrentId);
-    std::string getTorrents() const;
+    std::string addTorrent(std::string const& torrent) override;
+    std::string deleteTorrent(std::string const& torrentId) override;
+    std::string getTorrents() const override;
     void run();
     void stop();
 
+private:
+    std::string addTorrentImpl(std::string const& torrent);
+    std::string deleteTorrentImpl(std::string const& torrentId);
+    std::string onFileSentImpl(std::string const& fileId, std::string const& fileName);
 private:
     static double toMegabytesInSecond(std::string const& speed);
     static std::string downloadedPercentsToLoadBar(std::string const& downloaded);

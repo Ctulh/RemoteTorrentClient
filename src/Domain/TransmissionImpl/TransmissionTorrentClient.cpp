@@ -7,12 +7,16 @@
 #include "Domain/TransmissionImpl/TransmissionTorrentParser.hpp"
 #include "Domain/TorrentBuilder.hpp"
 
+TransmissionTorrentClient::TransmissionTorrentClient() {
+    TransmissionTorrentPerformer::init();
+}
+
 Torrent TransmissionTorrentClient::addTorrent(std::string const& url) {
     auto addResult = TransmissionTorrentPerformer::addTorrent(url);
-    if(addResult.find("success") != std::string::npos) {
-        return TorrentBuilder().withName("Success").build();
+    if(addResult) {
+        return TorrentBuilder().withMessage("Success").build();
     }
-    return TorrentBuilder().withName("Error").build();
+    return TorrentBuilder().withMessage("Error").build();
 }
 
 Torrent TransmissionTorrentClient::deleteTorrent(std::string const& id) {
