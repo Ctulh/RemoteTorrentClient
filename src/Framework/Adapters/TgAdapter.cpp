@@ -1,45 +1,61 @@
 //
 // Created by ctuh on 1/19/23.
 //
-#include "Framework/Adapters/TgAdapter.hpp"
 #include <tgbot/tgbot.h>
-#include "Utils/FileWriter.hpp"
-
 #include <sstream>
+
+#include "Framework/Adapters/TgAdapter.hpp"
+#include "Utils/FileWriter.hpp"
+#include "Utils/JsonConfigReader.hpp"
+#include "Utils/WrongConfigPathException.hpp"
 
 namespace {
     std::string addCommandString = "/add";
 }
 
 
-TgAdapter::TgAdapter(const std::string &configPath, std::shared_ptr<IApplication> application): m_application(std::move(application)),
-                                                                                                m_bot("TOKEN_HERE") { //TODO config reader
-    m_bot.getEvents().onCommand("start", [this](TgBot::Message::Ptr message) {
-        m_bot.getApi().sendMessage(message->chat->id, "Hi!");
+TgAdapter::TgAdapter(std::string const& configPath, std::shared_ptr<IApplication> application): m_application(std::move(application)) {
+    auto configReader = JsonConfigReader(configPath);
+    auto botApi = configReader["botApi"];
+    auto chatFilesDownloadDestinationValue = configReader["chatFilesDownloadDestination"];
+
+    if(!botApi.has_value()) {
+        std::cerr << "can't find \"botApi\" field in config: " << configPath;
+    }
+    if(!chatFilesDownloadDestinationValue.has_value()) {
+        std::cerr << "can't find \"chatFilesDownloadDestination\" field in config: " << configPath;
+    }
+
+    m_bot = std::make_unique<TgBot::Bot>(botApi.value());
+    m_downloadDestination = chatFilesDownloadDestinationValue.value();
+
+
+    m_bot->getEvents().onCommand("start", [this](TgBot::Message::Ptr message) {
+        m_bot->getApi().sendMessage(message->chat->id, "Hi!");
     });
 
-    m_bot.getEvents().onCommand("add", [this](TgBot::Message::Ptr message) {
+    m_bot->getEvents().onCommand("add", [this](TgBot::Message::Ptr message) {
         auto result = this->addTorrent(message->text);
-        m_bot.getApi().sendMessage(message->chat->id, result);
+        m_bot->getApi().sendMessage(message->chat->id, result);
     });
 
-    m_bot.getEvents().onCommand("del", [this](TgBot::Message::Ptr message) {
+    m_bot->getEvents().onCommand("del", [this](TgBot::Message::Ptr message) {
         auto result = this->deleteTorrent(message->text);
-        m_bot.getApi().sendMessage(message->chat->id, result);
+        m_bot->getApi().sendMessage(message->chat->id, result);
     });
 
-    m_bot.getEvents().onCommand("list", [this](TgBot::Message::Ptr message) {
+    m_bot->getEvents().onCommand("list", [this](TgBot::Message::Ptr message) {
         auto result = this->getTorrents();
-        m_bot.getApi().sendMessage(message->chat->id, result);
+        m_bot->getApi().sendMessage(message->chat->id, result);
     });
 
-    m_bot.getEvents().onNonCommandMessage([this](TgBot::Message::Ptr message) {
+    m_bot->getEvents().onNonCommandMessage([this](TgBot::Message::Ptr message) {
         try {
             auto result = onFileSentImpl(message->document->fileId, message->document->fileName);
-            m_bot.getApi().sendMessage(message->chat->id, result);
+            m_bot->getApi().sendMessage(message->chat->id, result);
         }
         catch(std::exception& e) {
-            m_bot.getApi().sendMessage(message->chat->id, "Cant process this message");
+            m_bot->getApi().sendMessage(message->chat->id, "Cant process this message");
         }
     });
 }
@@ -78,8 +94,10 @@ std::string TgAdapter::getTorrents() const {
         resultMessage << '\n';
     };
 
-    std::ranges::for_each(torrents->begin(), torrents->end(), writeTorrentInfo);
-    return resultMessage.str();
+    std::ranges::for_each(torrents->begin(  ), torrents->end(), writeTorrentInfo);
+    if(!resultMessage.str().empty())
+        return resultMessage.str();
+    return "No Torrents";
 }
 
 std::string TgAdapter::deleteTorrentImpl(std::string const& torrentId) {
@@ -97,10 +115,10 @@ std::string TgAdapter::addTorrentImpl(const std::string &torrent) {
 }
 
 std::string TgAdapter::onFileSentImpl(std::string const& fileId, std::string const& fileName) {
-    auto file = this->m_bot.getApi().getFile(fileId);
-    auto fileData = this->m_bot.getApi().downloadFile(file->filePath);
+    auto file = this->m_bot->getApi().getFile(fileId);
+    auto fileData = this->m_bot->getApi().downloadFile(file->filePath);
 
-    auto filePath = "tgDownloads/" + fileName; //TODO load download tg file dir from config
+    auto filePath = m_downloadDestination + fileName;
     FileWriter::write(fileData, filePath);
 
     return this->addTorrentImpl(filePath);
@@ -144,7 +162,7 @@ std::string TgAdapter::downloadedPercentsToLoadBar(const std::string &downloaded
 
 void TgAdapter::run() {
     m_isRunning.test_and_set();
-    TgBot::TgLongPoll longPoll(m_bot);
+    TgBot::TgLongPoll longPoll(*m_bot);
     while (m_isRunning.test()) {
         longPoll.start();
     }

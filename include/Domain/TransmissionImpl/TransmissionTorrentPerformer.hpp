@@ -8,7 +8,8 @@ public:
     TransmissionTorrentPerformer() = delete;
 public:
     static bool init();
-    static bool addTorrent(std::string const& data);
-    static std::string deleteTorrent(std::string const& id);
+    static bool setDestinationPath(std::string const& destinationPath);
+    static bool addTorrent(std::string const& torrent);
+    static std::string deleteTorrent(std::string const& torrentId);
     static std::string getTorrents();
 };

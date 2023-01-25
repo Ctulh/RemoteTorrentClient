@@ -85,7 +85,7 @@ namespace {
 
 }
 
-std::vector<Torrent> TransmissionTorrentParser::stringToTorrents(const std::string &data) {
+std::vector<Torrent> TransmissionTorrentParser::stringToTorrents(std::string const& data) {
     std::vector<Torrent> result;
 
     auto lines = StringOperations::split(data, '\n');

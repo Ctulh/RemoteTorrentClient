@@ -1,3 +1,4 @@
 {
-	"telegramBotApi": "TOKEN_HERE"
+	"botApi": "TORRENT_HERE",
+	"chatFilesDownloadDestination": "./tgDownloads/"
 }

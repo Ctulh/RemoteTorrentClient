@@ -4,7 +4,6 @@
 #include "Domain/TransmissionImpl/TransmissionTorrentPerformer.hpp"
 
 #include <stdio.h>
-#include <iostream>
 
 bool TransmissionTorrentPerformer::init() {
     std::string resultString;
@@ -19,9 +18,21 @@ bool TransmissionTorrentPerformer::init() {
     return false;
 }
 
-bool TransmissionTorrentPerformer::addTorrent(const std::string &magnetLink) {
+bool TransmissionTorrentPerformer::setDestinationPath(const std::string &destinationPath) {
     std::string resultString;
-    FILE *fp = popen( ("transmission-remote -a \"" + magnetLink + '\"').c_str(), "r");
+    FILE *fp = popen( ("transmission-remote --download-dir " + destinationPath).c_str(), "r");
+    char buf[1024];
+
+    while (fgets(buf, 1024, fp)) {
+        resultString += buf;
+    }
+
+    return true;
+}
+
+bool TransmissionTorrentPerformer::addTorrent(std::string const& torrent) {
+    std::string resultString;
+    FILE *fp = popen( ("transmission-remote -a \"" + torrent + '\"').c_str(), "r");
     char buf[1024];
 
     while (fgets(buf, 1024, fp)) {
@@ -32,9 +43,9 @@ bool TransmissionTorrentPerformer::addTorrent(const std::string &magnetLink) {
     return true;
 }
 
-std::string TransmissionTorrentPerformer::deleteTorrent(std::string const& id) {
+std::string TransmissionTorrentPerformer::deleteTorrent(std::string const& torrentId) {
     std::string resultString;
-    FILE *fp = popen( ("transmission-remote -t " + id + " -r").c_str(), "r");
+    FILE *fp = popen( ("transmission-remote -t " + torrentId + " -r").c_str(), "r");
     char buf[1024];
 
     while (fgets(buf, 1024, fp)) {

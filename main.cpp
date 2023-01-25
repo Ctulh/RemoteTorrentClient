@@ -3,6 +3,7 @@
 
 #include "include/Domain/DomainImpl.hpp"
 #include "include/Application/ApplicationImpl.hpp"
+#include "Framework/IAdapter.hpp"
 #include "Framework/Adapters/TgAdapter.hpp"
 #include "Domain/TransmissionImpl/TransmissionTorrentClient.hpp"
 
@@ -39,13 +40,21 @@ int main(int argc, char** argv) {
     }
 
 
-    auto domain = std::make_unique<DomainImpl<TransmissionTorrentClient>>(configPath);
-    auto application = std::make_shared<ApplicationImpl>(std::move(domain));
-    auto adapter = std::make_shared<TgAdapter>("1", application);
-    adapter->run();
+    std::unique_ptr<IDomain> domain;
+    std::shared_ptr<IApplication> application;
+    std::unique_ptr<IAdapter> adapter;
 
-    //if(not telegramConfigPath.empty())
-    //    telegramConfigPath(application);
+    try {
+        domain = std::make_unique<DomainImpl<TransmissionTorrentClient>>(configPath);
+        application = std::make_shared<ApplicationImpl>(std::move(domain));
+        adapter = std::make_unique<TgAdapter>(telegramConfigPath, application);
+    }
+    catch (std::exception& e) {
+        std::cout << e.what() << std::endl;
+        return 1;
+    }
+
+    adapter->run();
 
     return 0;
 }

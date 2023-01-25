@@ -1,22 +1,22 @@
 
 #pragma once
 
-#include "Framework/Interface.hpp"
+#include "Framework/IAdapter.hpp"
 #include "Application/IApplication.hpp"
 
 #include <tgbot/tgbot.h>
 #include <memory>
 #include <atomic>
 
-class TgAdapter final : public Interface {
+class TgAdapter final : public IAdapter {
 public:
-    explicit TgAdapter(std::string const& configPath, std::shared_ptr<IApplication> application);
+    explicit TgAdapter(std::string const& configPath, std::shared_ptr<IApplication> application) noexcept(false);
 public:
     std::string addTorrent(std::string const& torrent) override;
     std::string deleteTorrent(std::string const& torrentId) override;
     std::string getTorrents() const override;
-    void run();
-    void stop();
+    void run() override;
+    void stop() override;
 
 private:
     std::string addTorrentImpl(std::string const& torrent);
@@ -30,6 +30,7 @@ private:
 private:
     std::atomic_flag m_isRunning;
     std::string m_token;
-    TgBot::Bot m_bot;
+    std::string m_downloadDestination;
+    std::unique_ptr<TgBot::Bot> m_bot;
     std::shared_ptr<IApplication> m_application;
 };

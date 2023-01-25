@@ -6,11 +6,15 @@
 
 #include "Domain/Torrent.hpp"
 
-class Interface {
+class IAdapter {
 public:
-    virtual  ~Interface() = default;
+    virtual ~IAdapter() = default;
 public:
-    virtual std::string addTorrent(std::string const& magnetUrl) = 0;
+    virtual std::string addTorrent(std::string const& torrent) = 0;
     virtual std::string deleteTorrent(std::string const& torrentId) = 0;
     virtual std::string getTorrents() const = 0;
+
+    virtual void run() = 0;
+    virtual void stop() = 0;
+
 };

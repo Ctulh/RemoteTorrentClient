@@ -9,7 +9,7 @@
 #include <memory>
 
 template <typename T>
-concept TorrentClientBase = std::is_base_of_v<ITorrentClient, T> && std::is_default_constructible_v<T>;
+concept TorrentClientBase = std::is_base_of_v<ITorrentClient, T> && std::is_constructible_v<T, std::string>;
 
 template<TorrentClientBase TorrentClientType>
 class DomainImpl: public IDomain {
@@ -25,7 +25,7 @@ private:
 
 template<TorrentClientBase TorrentClientType>
 DomainImpl<TorrentClientType>::DomainImpl(const std::string &configPath) {
-    m_torrentClient = std::make_unique<TorrentClientType>();
+    m_torrentClient = std::make_unique<TorrentClientType>(configPath);
 }
 
 template<TorrentClientBase TorrentClientType>
