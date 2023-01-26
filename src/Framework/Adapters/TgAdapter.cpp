@@ -2,7 +2,6 @@
 // Created by ctuh on 1/19/23.
 //
 #include <tgbot/tgbot.h>
-#include <sstream>
 
 #include "Framework/Adapters/TgAdapter.hpp"
 #include "Utils/FileWriter.hpp"
@@ -11,10 +10,18 @@
 
 namespace {
     std::string addCommandString = "/add";
+
+    std::atomic<bool> volatile hasSignalValue = false;
+
+    void handleSignal(int) {
+        hasSignalValue = true;
+    }
 }
 
-
 TgAdapter::TgAdapter(std::string const& configPath, std::shared_ptr<IApplication> application): m_application(std::move(application)) {
+
+    signal(SIGINT, ::handleSignal);
+
     auto configReader = JsonConfigReader(configPath);
     auto botApi = configReader["botApi"];
     auto chatFilesDownloadDestinationValue = configReader["chatFilesDownloadDestination"];
@@ -84,17 +91,22 @@ std::string TgAdapter::getTorrents() const {
     std::stringstream resultMessage;
 
     auto writeTorrentInfo = [&resultMessage, this](auto torrent) {
-        resultMessage << torrent.id << ". " << shortTheLine(torrent.name) << " ";
+        auto torrentName = shortTheLine(torrent.name);
+        auto torrentId = torrent.id;
+        if(torrentId.back() == '*')
+            torrentId = torrentId.substr(0, torrentId.size()-1);
+
+        resultMessage << torrentId << ". " << std::string(torrentName.begin(), torrentName.end()) << " ";
         resultMessage << downloadedPercentsToLoadBar(torrent.percentsDone);
 
         if(torrent.timeLeft != "Done") {
             resultMessage << std::fixed << std::setprecision(2);
-            resultMessage << " " << toMegabytesInSecond(torrent.downloadSpeed) << " MB/s";
+            resultMessage << " " << toMegabytesInSecond(torrent.downloadSpeed)<< " MB/s";
         }
-        resultMessage << '\n';
+        resultMessage << std::endl;
     };
 
-    std::ranges::for_each(torrents->begin(  ), torrents->end(), writeTorrentInfo);
+    std::ranges::for_each(torrents->begin(), torrents->end(), writeTorrentInfo);
     if(!resultMessage.str().empty())
         return resultMessage.str();
     return "No Torrents";
@@ -129,14 +141,28 @@ double TgAdapter::toMegabytesInSecond(const std::string &speed) {
     return speedInKilobytesPerSecond/1000.0;
 }
 
-std::string TgAdapter::shortTheLine(std::string const& inputString, int outputLength) {
-    if(inputString.size() == outputLength)
-        return inputString;
+std::wstring TgAdapter::getSpaces(int amount) {
+    std::wstring outputString;
+    for(int i = 0; i < amount; i++)
+        outputString += ' ';
+    return outputString;
+}
 
-    std::string const endOfShortedString = "...";
-    std::string outputString;
+std::wstring TgAdapter::shortTheLine(std::string const& inputString, int outputLength) {
+    if(inputString.size() <= outputLength) {
+        std::wstring outputString(inputString.begin(), inputString.end());
+        outputString += getSpaces(outputLength - inputString.length() + 1);
+        return outputString;
+    }
 
-    outputString = inputString.substr(0, outputLength - endOfShortedString.size());
+    std::wstring const endOfShortedString = L"...";
+    std::wstring outputString;
+
+    std::for_each(inputString.begin(), inputString.end(), [&outputString, outputLength, endOfShortedString](auto symbol) {
+        if(outputString.length() <= outputLength - endOfShortedString.length())
+            if(std::isdigit(symbol) || std::isalpha(symbol) || symbol == ' ')
+                outputString.push_back(symbol);
+    });
     outputString += endOfShortedString;
     return outputString;
 }
@@ -161,13 +187,12 @@ std::string TgAdapter::downloadedPercentsToLoadBar(const std::string &downloaded
 }
 
 void TgAdapter::run() {
-    m_isRunning.test_and_set();
     TgBot::TgLongPoll longPoll(*m_bot);
-    while (m_isRunning.test()) {
+    while (not ::hasSignalValue) {
         longPoll.start();
     }
 }
 
 void TgAdapter::stop() {
-    m_isRunning.clear();
+    ::hasSignalValue = false;
 }

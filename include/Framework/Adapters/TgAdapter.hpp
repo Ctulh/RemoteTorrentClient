@@ -25,7 +25,8 @@ private:
 private:
     static double toMegabytesInSecond(std::string const& speed);
     static std::string downloadedPercentsToLoadBar(std::string const& downloaded);
-    static std::string shortTheLine(std::string const& inputString, int outputLength = 30);
+    static std::wstring shortTheLine(std::string const& inputString, int outputLength = 30);
+    static std::wstring getSpaces(int amount);
 
 private:
     std::atomic_flag m_isRunning;

@@ -14,8 +14,8 @@ int main(int argc, char** argv) {
     po::options_description desc("Allowed options");
     desc.add_options()
             ("help", "produce help message")
-            ("conf", po::value<std::string>(), "config path")
-            ("tgconf", po::value<std::string>(), "telegram config path");
+            ("config", po::value<std::string>(), "config path")
+            ("tgconfig", po::value<std::string>(), "telegram config path");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -29,16 +29,25 @@ int main(int argc, char** argv) {
     std::string configPath;
     std::string telegramConfigPath;
 
-    if(vm.count("conf")) {
-        std::cout << "conf: " << vm["conf"].as<std::string>() << '\n';
-        configPath = vm["conf"].as<std::string>();
+    if(vm.count("config")) {
+        std::cout << "config: " << vm["config"].as<std::string>() << '\n';
+        configPath = vm["config"].as<std::string>();
     }
 
-    if(vm.count("tgconf")) {
-        std::cout << "tgconf: " << vm["tgconf"].as<std::string>() << '\n';
-        telegramConfigPath = vm["tgconf"].as<std::string>();
+    if(vm.count("tgconfig")) {
+        std::cout << "tgconfig: " << vm["tgconfig"].as<std::string>() << '\n';
+        telegramConfigPath = vm["tgconfig"].as<std::string>();
     }
 
+    if(configPath.empty()) {
+        std::cout << "no config path";
+        return 1;
+    }
+
+    if(telegramConfigPath.empty()) {
+        std::cout << "no telegram config path";
+        return 1;
+    }
 
     std::unique_ptr<IDomain> domain;
     std::shared_ptr<IApplication> application;
