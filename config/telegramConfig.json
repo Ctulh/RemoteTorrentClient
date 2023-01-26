@@ -1,4 +1,4 @@
 {
-	"botApi": "TORRENT_HERE",
+	"botToken": "TOKEN_HERE",
 	"chatFilesDownloadDestination": "./tgDownloads/"
 }

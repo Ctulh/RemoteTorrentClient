@@ -23,11 +23,11 @@ TgAdapter::TgAdapter(std::string const& configPath, std::shared_ptr<IApplication
     signal(SIGINT, ::handleSignal);
 
     auto configReader = JsonConfigReader(configPath);
-    auto botApi = configReader["botApi"];
+    auto botApi = configReader["botToken"];
     auto chatFilesDownloadDestinationValue = configReader["chatFilesDownloadDestination"];
 
     if(!botApi.has_value()) {
-        std::cerr << "can't find \"botApi\" field in config: " << configPath;
+        std::cerr << "can't find \"botToken\" field in config: " << configPath;
     }
     if(!chatFilesDownloadDestinationValue.has_value()) {
         std::cerr << "can't find \"chatFilesDownloadDestination\" field in config: " << configPath;
