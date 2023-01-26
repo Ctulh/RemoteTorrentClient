@@ -41,5 +41,6 @@ Interaction
  - /add "torrent magnet link" (without quotes) - Starts downloading torrent.
  - /del "torrent id" (without quotes) - Deletes torrent.
  - /list - Prints the list with existing torrents and some statuses about them.
- Also client support attachable files. You can drag&drop or attach the torrent file to add it to the downloads.
+ 
+ ### Also client support attachable files. You can drag&drop or attach the torrent file to add it to the downloads.
   
