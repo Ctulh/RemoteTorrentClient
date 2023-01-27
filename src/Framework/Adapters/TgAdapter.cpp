@@ -53,7 +53,7 @@ TgAdapter::TgAdapter(std::string const& configPath, std::shared_ptr<IApplication
 
     m_bot->getEvents().onCommand("list", [this](TgBot::Message::Ptr message) {
         auto result = this->getTorrents();
-        m_bot->getApi().sendMessage(message->chat->id, result);
+        m_bot->getApi().sendMessage(message->chat->id, result, false, 0, nullptr, "Markdown");
     });
 
     m_bot->getEvents().onNonCommandMessage([this](TgBot::Message::Ptr message) {
@@ -90,13 +90,15 @@ std::string TgAdapter::getTorrents() const {
     auto torrents = m_application->getTorrents();
     std::stringstream resultMessage;
 
+    resultMessage << "```";
+
     auto writeTorrentInfo = [&resultMessage, this](auto torrent) {
         auto torrentName = shortTheLine(torrent.name);
         auto torrentId = torrent.id;
         if(torrentId.back() == '*')
             torrentId = torrentId.substr(0, torrentId.size()-1);
 
-        resultMessage << torrentId << ". " << std::string(torrentName.begin(), torrentName.end()) << " ";
+        resultMessage << " " << torrentId << ". " << std::string(torrentName.begin(), torrentName.end()) << " ";
         resultMessage << downloadedPercentsToLoadBar(torrent.percentsDone);
 
         if(torrent.timeLeft != "Done") {
@@ -107,6 +109,9 @@ std::string TgAdapter::getTorrents() const {
     };
 
     std::ranges::for_each(torrents->begin(), torrents->end(), writeTorrentInfo);
+
+    resultMessage << "\n ```";
+
     if(!resultMessage.str().empty())
         return resultMessage.str();
     return "No Torrents";
